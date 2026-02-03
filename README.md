@@ -149,18 +149,14 @@ Open a Pull Request
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ### 🙏 Acknowledgments
-Vue.js - Progressive JavaScript Framework
-
-Tailwind CSS - Utility-first CSS framework
-
-TanStack Query - Powerful async state management
-
-Chart.js - Simple yet flexible JavaScript charting
+Vue.js - Progressive JavaScript Framework  
+Tailwind CSS - Utility-first CSS framework  
+TanStack Query - Powerful async state management  
+Chart.js - Simple yet flexible JavaScript charting  
 
 ### 📞 Contact
-Your Name - @yourtwitter - email@example.com
-
-Project Link: https://github.com/YOUR_USERNAME/HEDb
+kali-krit@mail.ru  
+Project Link: https://github.com/kalikrit/HEDb  
 
 <div align="center">
 Made with ❤️ and Vue 3
