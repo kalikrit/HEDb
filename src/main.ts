@@ -1,19 +1,29 @@
-import { createApp } from 'vue'
-import { createPinia } from 'pinia'
-import App from './App.vue'
-import router from './router'
-import './assets/main.css'
+import { createApp } from "vue";
+import { createPinia } from "pinia";
+import App from "./App.vue";
+import router from "./router";
+import "./assets/main.css";
 
-const app = createApp(App)
-const pinia = createPinia()
+// Импортируем stores
+import { useUIStore } from "@/stores/ui";
+import { useAuthStore } from "@/stores/auth";
 
-app.use(pinia)
-app.use(router)
+const app = createApp(App);
+const pinia = createPinia();
 
-// Инициализируем тему после создания приложения
-import { useUIStore } from '@/stores/ui'
-app.mount('#app')
+app.use(pinia);
+app.use(router);
 
-// Инициализация темы
-const uiStore = useUIStore()
-uiStore.initTheme()
+// Инициализация stores после создания приложения
+app.mount("#app");
+
+const uiStore = useUIStore();
+const authStore = useAuthStore();
+
+uiStore.init();
+authStore.init();
+
+// Экспортируем stores для использования в devtools
+if (import.meta.env.DEV) {
+  window.__PINIA_STORES__ = { uiStore, authStore };
+}
