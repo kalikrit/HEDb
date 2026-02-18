@@ -3,7 +3,7 @@
     <!-- Заголовок -->
     <div class="flex items-center justify-between">
       <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
-        Добро пожаловать, {{ user?.name || 'Гость' }}! 👋
+        Добро пожаловать, {{ user?.name || 'Гость' }}!
       </h1>
       <div class="flex items-center space-x-2">
         <Badge variant="success" dot>Система работает</Badge>

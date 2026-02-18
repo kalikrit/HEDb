@@ -1,14 +1,10 @@
 <template>
-  <Transition
-    enter-active-class="transition duration-300 ease-out"
-    enter-from-class="transform scale-95 opacity-0"
-    enter-to-class="transform scale-100 opacity-100"
-  >
+  <div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
     <div class="w-full max-w-md">
       <!-- Логотип и заголовок -->
       <div class="text-center mb-8">
-        <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl shadow-lg mb-4">
-          <ShoppingBag class="w-10 h-10 text-white" />
+        <div class="inline-flex items-center justify-center w-16 h-16 bg-primary-600 rounded-2xl mb-4">
+          <ShoppingBag class="w-8 h-8 text-white" />
         </div>
         <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
           HEDb Dashboard
@@ -19,7 +15,7 @@
       </div>
 
       <!-- Карточка с формой -->
-      <Card class="w-full shadow-xl">
+      <Card class="w-full">
         <form @submit.prevent="handleLogin" class="space-y-6">
           <!-- Email -->
           <div>
@@ -57,7 +53,7 @@
               <input
                 v-model="form.remember"
                 type="checkbox"
-                class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500"
               />
               <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">
                 Запомнить меня
@@ -78,24 +74,20 @@
             variant="primary"
             block
             :loading="authStore.isLoading"
-            size="lg"
           >
             Войти
           </Button>
 
           <!-- Ошибка формы -->
-          <div v-if="errors.form" class="p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg">
-            <p class="text-sm text-red-600 dark:text-red-400 text-center">
-              {{ errors.form }}
-            </p>
-          </div>
+          <p v-if="errors.form" class="text-sm text-red-600 text-center">
+            {{ errors.form }}
+          </p>
         </form>
       </Card>
 
-      <!-- Демо-данные -->
+      <!-- Демо-доступ -->
       <div class="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-        <p class="text-sm font-medium text-blue-800 dark:text-blue-300 mb-3 flex items-center">
-          <Info class="w-4 h-4 mr-1" />
+        <p class="text-sm font-medium text-blue-800 dark:text-blue-300 mb-3">
           Демо-доступ:
         </p>
         <div class="space-y-2">
@@ -143,9 +135,8 @@
         </router-link>
       </p>
     </div>
-  </Transition>
+  </div>
 </template>
-
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
