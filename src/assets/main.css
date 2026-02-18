@@ -2,37 +2,73 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Ваши существующие стили ниже */
+/* Глобальные стили для растягивания */
+html, body {
+  width: 100%;
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+}
+
 #app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  font-weight: normal;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
-a,
-.green {
-  text-decoration: none;
-  color: hsla(160, 100%, 37%, 1);
-  transition: 0.4s;
-  padding: 3px;
+/* Контейнер для контента */
+.content-container {
+  flex: 1;
+  width: 100%;
 }
 
-@media (hover: hover) {
-  a:hover {
-    background-color: hsla(160, 100%, 37%, 0.2);
-  }
+/* Принудительное растягивание для всех основных блоков */
+.min-h-screen {
+  min-height: 100vh;
 }
 
-@media (min-width: 1024px) {
-  body {
-    display: flex;
-    place-items: center;
-  }
+.flex-1 {
+  flex: 1 1 0%;
+}
 
-  #app {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    padding: 0 2rem;
-  }
+.w-full {
+  width: 100% !important;
+}
+
+.max-w-full {
+  max-width: 100% !important;
+}
+
+/* Глобальные стили для layout */
+.fixed-sidebar-layout {
+  width: 100%;
+  min-height: 100vh;
+  position: relative;
+}
+
+.fixed-sidebar-layout .content-with-sidebar {
+  margin-left: 256px;
+  width: calc(100% - 256px);
+  transition: margin-left 0.3s ease, width 0.3s ease;
+}
+
+.fixed-sidebar-layout .content-without-sidebar {
+  margin-left: 0;
+  width: 100%;
+}
+
+.force-sidebar-open {
+  margin-left: 256px !important;
+  width: calc(100% - 256px) !important;
+}
+
+.force-sidebar-closed {
+  margin-left: 0 !important;
+  width: 100% !important;
+}
+
+/* Отключаем любые трансформации */
+.min-h-screen.flex.flex-col {
+  transform: none !important;
 }

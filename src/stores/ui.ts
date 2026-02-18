@@ -4,12 +4,15 @@ import { STORAGE_KEYS } from "@/utils/constants";
 
 export const useUIStore = defineStore("ui", () => {
   // ==================== State ====================
-  const isSidebarOpen = ref(true);
+  const isSidebarOpen = ref(true); // Начальное значение
   const theme = ref<"light" | "dark">("light");
   const isLoading = ref(false);
   const loadingMessage = ref("");
   const notifications = ref<Array<{ id: string; message: string; type: "success" | "error" | "info" }>>([]);
   const currentView = ref("dashboard");
+  
+  // Флаг для блокировки изменений из роутера
+  let isInitialized = false;
 
   // ==================== Getters ====================
   const getTheme = computed(() => theme.value);
@@ -41,15 +44,20 @@ export const useUIStore = defineStore("ui", () => {
     localStorage.setItem(STORAGE_KEYS.THEME, theme.value);
   };
 
-  // Sidebar
+  // 👇 ЕДИНСТВЕННОЕ МЕСТО, ГДЕ МЕНЯЕТСЯ САЙДБАР
   const toggleSidebar = () => {
+    console.log('🔄 toggleSidebar called, current:', isSidebarOpen.value);
     isSidebarOpen.value = !isSidebarOpen.value;
+    console.log('🔄 new value:', isSidebarOpen.value);
     localStorage.setItem(STORAGE_KEYS.SIDEBAR_STATE, JSON.stringify(isSidebarOpen.value));
   };
 
   const setSidebarOpen = (open: boolean) => {
-    isSidebarOpen.value = open;
-    localStorage.setItem(STORAGE_KEYS.SIDEBAR_STATE, JSON.stringify(open));
+    if (isSidebarOpen.value !== open) {
+      console.log('📌 setSidebarOpen:', open);
+      isSidebarOpen.value = open;
+      localStorage.setItem(STORAGE_KEYS.SIDEBAR_STATE, JSON.stringify(open));
+    }
   };
 
   // Загрузка
@@ -78,7 +86,6 @@ export const useUIStore = defineStore("ui", () => {
     const id = Date.now().toString();
     notifications.value.push({ id, message, type });
     
-    // Автоудаление через 5 секунд
     setTimeout(() => {
       removeNotification(id);
     }, 5000);
@@ -99,30 +106,33 @@ export const useUIStore = defineStore("ui", () => {
 
   // ==================== Инициализация ====================
   const init = () => {
+    console.log('📌 UI Store initializing...');
+    
     // Восстанавливаем тему
     const savedTheme = localStorage.getItem(STORAGE_KEYS.THEME) as "light" | "dark" | null;
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    
     theme.value = savedTheme || (prefersDark ? "dark" : "light");
     applyTheme();
 
-    // Восстанавливаем состояние sidebar
+    // Восстанавливаем состояние sidebar - ТОЛЬКО если нет сохраненного значения
     const savedSidebarState = localStorage.getItem(STORAGE_KEYS.SIDEBAR_STATE);
-    if (savedSidebarState) {
+    if (savedSidebarState !== null) {
+      // Убираем setSidebarOpen, присваиваем напрямую
       isSidebarOpen.value = JSON.parse(savedSidebarState);
+      console.log('📌 Restored sidebar from localStorage:', isSidebarOpen.value);
+    } else {
+      // Если нет сохраненного значения, оставляем true (по умолчанию)
+      console.log('📌 Using default sidebar value:', isSidebarOpen.value);
     }
-
-    // Слушаем изменения системной темы
-    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
-      if (!localStorage.getItem(STORAGE_KEYS.THEME)) {
-        setTheme(e.matches ? "dark" : "light");
-      }
-    });
+    
+    console.log('📌 UI Store initialized, sidebar:', isSidebarOpen.value);
+    isInitialized = true;
   };
 
-  // ==================== Watch ====================
-  watch(theme, (newTheme) => {
-    localStorage.setItem(STORAGE_KEYS.THEME, newTheme);
+  // ==================== Watch для сохранения ====================
+  watch(isSidebarOpen, (newVal) => {
+    localStorage.setItem(STORAGE_KEYS.SIDEBAR_STATE, JSON.stringify(newVal));
+    console.log('💾 Sidebar state saved:', newVal);
   });
 
   // ==================== Экспорт ====================
@@ -143,7 +153,6 @@ export const useUIStore = defineStore("ui", () => {
     getNotifications,
     getCurrentView,
 
-    // Actions
     toggleTheme,
     setTheme,
     toggleSidebar,
