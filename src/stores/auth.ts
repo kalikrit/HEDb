@@ -149,6 +149,7 @@ export const useAuthStore = defineStore("auth", () => {
     token,
     isAuthenticated,
     isLoading,
+    login,
 
     // Getters
     getUser,

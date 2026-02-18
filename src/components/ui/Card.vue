@@ -8,7 +8,7 @@
     ]"
   >
     <!-- Шапка карточки (опционально) -->
-    <div v-if="$slots.header || title" class="border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+    <div v-if="hasHeader || title" class="border-b border-gray-200 dark:border-gray-700 px-6 py-4">
       <div class="flex items-center justify-between">
         <h3 v-if="title" class="text-lg font-semibold text-gray-900 dark:text-white">
           {{ title }}
@@ -23,20 +23,20 @@
     </div>
 
     <!-- Футер карточки (опционально) -->
-    <div v-if="$slots.footer" class="border-t border-gray-200 dark:border-gray-700 px-6 py-4">
+    <div v-if="hasFooter" class="border-t border-gray-200 dark:border-gray-700 px-6 py-4">
       <slot name="footer" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, useSlots } from "vue";
 
 interface Props {
   title?: string;
   padding?: "none" | "sm" | "md" | "lg";
   hoverable?: boolean;
-  noPadding?: boolean; // для обратной совместимости
+  noPadding?: boolean;
   class?: string;
 }
 
@@ -46,6 +46,12 @@ const props = withDefaults(defineProps<Props>(), {
   noPadding: false,
   class: "",
 });
+
+const slots = useSlots();
+
+// Проверяем наличие слотов
+const hasHeader = computed(() => !!slots.header);
+const hasFooter = computed(() => !!slots.footer);
 
 const paddingClasses = computed(() => {
   if (props.noPadding) return "";
@@ -62,7 +68,10 @@ const paddingClasses = computed(() => {
 const contentClasses = computed(() => {
   // Если есть шапка, то внутренний padding уже в ней
   // Если нет, то применяем padding к контенту
-  return props.$slots.header || props.title ? "p-6" : paddingClasses.value;
+  if (hasHeader.value || props.title) {
+    return "p-6";
+  }
+  return paddingClasses.value;
 });
 
 const className = computed(() => props.class);
