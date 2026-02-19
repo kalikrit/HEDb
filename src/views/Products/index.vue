@@ -351,13 +351,11 @@ const filters = reactive<ProductFilters>({
 
 // 👇 СИНХРОНИЗИРУЕМ ИЗМЕНЕНИЯ С STORE
 watch(filters, (newFilters) => {
-  console.log('🔄 Фильтры изменились, обновляем store', newFilters);
   productsStore.setFilters(newFilters);
 }, { deep: true });
 
 // 👇 СЛЕДИМ ЗА ИЗМЕНЕНИЯМИ В STORE (на случай если фильтры меняются из другого места)
 watch(storeFilters, (newStoreFilters) => {
-  console.log('📥 Store фильтры изменились, обновляем локальные', newStoreFilters);
   // Обновляем локальные фильтры без триггера watch
   filters.search = newStoreFilters.search || "";
   filters.category = newStoreFilters.category || "";

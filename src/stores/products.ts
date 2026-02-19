@@ -77,15 +77,13 @@ export const useProductsStore = defineStore("products", () => {
   
   // Установка фильтров
   const setFilters = (newFilters: ProductFilters) => {
-    console.log('🔍 Store: установка фильтров', newFilters);
     filters.value = { ...filters.value, ...newFilters };
-    page.value = 1; // 👈 page уже определена
+    page.value = 1;
     pagination.value.page = 1;
   };
 
   // Сброс фильтров
   const resetFilters = () => {
-    console.log('🧹 Store: сброс фильтров');
     filters.value = {};
     page.value = 1;
     pagination.value.page = 1;
