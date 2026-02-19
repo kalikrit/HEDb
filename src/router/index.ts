@@ -18,6 +18,12 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/products/new',
+      name: 'new-product',
+      component: () => import('@/views/Products/New.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/products/:id',
       name: 'product-detail',
       component: () => import('@/views/Products/Detail.vue'),
