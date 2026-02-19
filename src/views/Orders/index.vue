@@ -219,6 +219,7 @@ const {
   ordersGroupedByStatus,
   getPagination,
   getIsLoading: isLoading,
+  getSortConfig,
 } = storeToRefs(ordersStore);
 
 // Состояние
@@ -356,8 +357,24 @@ const clearAllFilters = () => {
   applyFilters();
 };
 
-const handleSort = (key: string, order: string) => {
-  console.log("Sort:", key, order);
+const handleSort = (key: string, order: 'asc' | 'desc') => {
+  console.log("========== СОРТИРОВКА ==========");
+  console.log("1. Колонка:", key);
+  console.log("2. Порядок:", order);
+  console.log("3. Текущий sortConfig в store:", getSortConfig.value);
+  
+  ordersStore.setSort(key, order);
+  
+  // Проверим результат через секунду
+  setTimeout(() => {
+    console.log("4. После сортировки, первые 3 заказа:", 
+      getPagination.value.data.slice(0, 3).map(o => ({
+        номер: o.orderNumber,
+        клиент: o.customer.name,
+        сумма: o.total
+      }))
+    );
+  }, 100);
 };
 
 const handlePageChange = (newPage: number) => {

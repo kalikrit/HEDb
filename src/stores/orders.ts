@@ -3,7 +3,7 @@ import { ref, computed } from "vue";
 import type { Order, OrderStatus, OrderFilters, Customer } from "@/types";
 import { PAGINATION } from "@/utils/constants";
 
-// Мок данные для демо
+// Мок данные для демо (без изменений)
 const generateMockCustomers = (count: number): Customer[] => {
   const names = ["Иван Петров", "Мария Иванова", "Алексей Смирнов", "Елена Козлова", "Дмитрий Новиков"];
   const cities = ["Москва", "Санкт-Петербург", "Казань", "Екатеринбург", "Новосибирск"];
@@ -91,6 +91,12 @@ export const useOrdersStore = defineStore("orders", () => {
   const limit = ref(PAGINATION.DEFAULT_LIMIT);
   const isLoading = ref(false);
   const kanbanView = ref(true); // true - канбан, false - таблица
+  
+  // 👇 НОВОЕ: состояние сортировки
+  const sortConfig = ref({
+    key: 'createdAt',
+    order: 'desc' as 'asc' | 'desc'
+  });
 
   // ==================== Getters ====================
   const getOrders = computed(() => orders.value);
@@ -100,6 +106,8 @@ export const useOrdersStore = defineStore("orders", () => {
   const getLimit = computed(() => limit.value);
   const getIsLoading = computed(() => isLoading.value);
   const getKanbanView = computed(() => kanbanView.value);
+  // 👇 НОВЫЙ: геттер для сортировки
+  const getSortConfig = computed(() => sortConfig.value);
 
   // Статистика по статусам
   const ordersByStatus = computed(() => {
@@ -172,10 +180,11 @@ export const useOrdersStore = defineStore("orders", () => {
     return grouped;
   });
 
-  // Отфильтрованные заказы для таблицы
+  // 👇 ОБНОВЛЕННЫЙ: Отфильтрованные и отсортированные заказы
   const getFilteredOrders = computed(() => {
     let filtered = [...orders.value];
 
+    // Применяем фильтры
     if (filters.value.search) {
       const searchLower = filters.value.search.toLowerCase();
       filtered = filtered.filter(o => 
@@ -209,11 +218,70 @@ export const useOrdersStore = defineStore("orders", () => {
       filtered = filtered.filter(o => o.total <= filters.value.maxTotal!);
     }
 
+    // 👇 ПРИМЕНЯЕМ СОРТИРОВКУ
+    if (sortConfig.value.key) {
+      filtered.sort((a, b) => {
+        let aVal, bVal;
+        
+        // Обработка специальных полей
+        switch (sortConfig.value.key) {
+          case 'customer':
+            aVal = a.customer.name.toLowerCase();
+            bVal = b.customer.name.toLowerCase();
+            break;
+            
+          case 'orderNumber':
+            aVal = a.orderNumber;
+            bVal = b.orderNumber;
+            break;
+            
+          case 'total':
+            aVal = a.total;
+            bVal = b.total;
+            break;
+            
+          case 'status':
+            aVal = a.status;
+            bVal = b.status;
+            break;
+            
+          case 'paymentStatus':
+            aVal = a.paymentStatus;
+            bVal = b.paymentStatus;
+            break;
+            
+          case 'createdAt':
+            aVal = new Date(a.createdAt).getTime();
+            bVal = new Date(b.createdAt).getTime();
+            break;
+            
+          default:
+            aVal = a[sortConfig.value.key];
+            bVal = b[sortConfig.value.key];
+        }
+
+        // Числовая сортировка
+        if (typeof aVal === 'number' && typeof bVal === 'number') {
+          return sortConfig.value.order === 'asc' ? aVal - bVal : bVal - aVal;
+        }
+
+        // Строковая сортировка
+        const aStr = String(aVal).toLowerCase();
+        const bStr = String(bVal).toLowerCase();
+        
+        return sortConfig.value.order === 'asc' 
+          ? aStr.localeCompare(bStr)
+          : bStr.localeCompare(aStr);
+      });
+    }
+
     return filtered;
   });
 
+  // 👇 ОБНОВЛЕННЫЙ: Пагинация с учетом сортировки
   const getPagination = computed(() => {
-    const total = getFilteredOrders.value.length;
+    const filtered = getFilteredOrders.value;
+    const total = filtered.length;
     const start = (page.value - 1) * limit.value;
     const end = start + limit.value;
     
@@ -221,7 +289,7 @@ export const useOrdersStore = defineStore("orders", () => {
       page: page.value,
       limit: limit.value,
       total,
-      data: getFilteredOrders.value.slice(start, end),
+      data: filtered.slice(start, end),
     };
   });
 
@@ -248,6 +316,13 @@ export const useOrdersStore = defineStore("orders", () => {
 
   const toggleView = () => {
     kanbanView.value = !kanbanView.value;
+  };
+
+  // 👇 НОВЫЙ: метод для установки сортировки
+  const setSort = (key: string, order: 'asc' | 'desc') => {
+    console.log('📊 Store sort:', key, order);
+    sortConfig.value = { key, order };
+    page.value = 1; // Сбрасываем на первую страницу при сортировке
   };
 
   const fetchOrders = async () => {
@@ -318,6 +393,7 @@ export const useOrdersStore = defineStore("orders", () => {
     limit,
     isLoading,
     kanbanView,
+    sortConfig,
 
     // Getters
     getOrders,
@@ -327,6 +403,7 @@ export const useOrdersStore = defineStore("orders", () => {
     getLimit,
     getIsLoading,
     getKanbanView,
+    getSortConfig,
     ordersByStatus,
     ordersGroupedByStatus,
     getFilteredOrders,
@@ -338,6 +415,7 @@ export const useOrdersStore = defineStore("orders", () => {
     setPage,
     setLimit,
     toggleView,
+    setSort,
     fetchOrders,
     fetchOrderById,
     updateOrderStatus,

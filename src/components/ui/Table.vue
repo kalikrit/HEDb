@@ -9,27 +9,30 @@
             :key="column.key"
             scope="col"
             class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-            :class="column.align === 'right' ? 'text-right' : column.align === 'center' ? 'text-center' : 'text-left'"
+            :class="[
+              column.align === 'right' ? 'text-right' : column.align === 'center' ? 'text-center' : 'text-left',
+              column.sortable ? 'cursor-pointer hover:text-gray-700 dark:hover:text-gray-200' : ''
+            ]"
+            @click="column.sortable && handleSort(column.key)"
           >
             <div class="flex items-center gap-1" :class="column.align === 'right' ? 'justify-end' : column.align === 'center' ? 'justify-center' : 'justify-start'">
               {{ column.label }}
               
-              <!-- Сортировка -->
-              <button
-                v-if="column.sortable"
-                @click="sort(column.key)"
-                class="ml-1 focus:outline-none"
-              >
-                <ArrowUp
+              <!-- Иконка сортировки -->
+              <div v-if="column.sortable" class="inline-flex ml-1">
+                <ArrowUp 
                   v-if="sortKey === column.key && sortOrder === 'asc'"
-                  class="w-4 h-4 text-primary-600"
+                  class="w-4 h-4 text-primary-600" 
                 />
-                <ArrowDown
+                <ArrowDown 
                   v-else-if="sortKey === column.key && sortOrder === 'desc'"
-                  class="w-4 h-4 text-primary-600"
+                  class="w-4 h-4 text-primary-600" 
                 />
-                <ArrowUpDown v-else class="w-4 h-4 text-gray-400" />
-              </button>
+                <ArrowUpDown 
+                  v-else 
+                  class="w-4 h-4 text-gray-400" 
+                />
+              </div>
             </div>
           </th>
         </tr>
@@ -38,7 +41,7 @@
       <!-- Тело таблицы -->
       <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
         <tr
-          v-for="(row, rowIndex) in data"
+          v-for="(row, rowIndex) in processedData"
           :key="rowIndex"
           :class="[
             'hover:bg-gray-50 dark:hover:bg-gray-800',
@@ -52,13 +55,13 @@
             :class="column.align === 'right' ? 'text-right' : column.align === 'center' ? 'text-center' : 'text-left'"
           >
             <slot :name="column.key" :row="row" :value="row[column.key]">
-              {{ row[column.key] }}
+              {{ formatValue(row[column.key]) }}
             </slot>
           </td>
         </tr>
         
         <!-- Пустое состояние -->
-        <tr v-if="data.length === 0">
+        <tr v-if="processedData.length === 0">
           <td
             :colspan="columns.length"
             class="px-6 py-12 text-center text-sm text-gray-500 dark:text-gray-400"
@@ -105,7 +108,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { ArrowUp, ArrowDown, ArrowUpDown, PackageOpen } from "lucide-vue-next";
 import Button from "./Button.vue";
 
@@ -124,6 +127,7 @@ interface Props {
   page?: number;
   perPage?: number;
   rowClass?: (row: Record<string, any>) => string;
+  sortable?: boolean; // глобальный флаг сортировки
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -131,6 +135,7 @@ const props = withDefaults(defineProps<Props>(), {
   total: 0,
   page: 1,
   perPage: 20,
+  sortable: true,
 });
 
 const emit = defineEmits<{
@@ -141,14 +146,54 @@ const emit = defineEmits<{
 const sortKey = ref<string>("");
 const sortOrder = ref<"asc" | "desc">("asc");
 
-const sort = (key: string) => {
+// Обработка сортировки
+const handleSort = (key: string) => {
   if (sortKey.value === key) {
+    // Меняем порядок
     sortOrder.value = sortOrder.value === "asc" ? "desc" : "asc";
   } else {
+    // Новая колонка
     sortKey.value = key;
     sortOrder.value = "asc";
   }
   
   emit("sort", sortKey.value, sortOrder.value);
+};
+
+// Сортировка данных (клиентская)
+const processedData = computed(() => {
+  let result = [...props.data];
+  
+  // Применяем сортировку если есть ключ
+  if (sortKey.value) {
+    result.sort((a, b) => {
+      const aVal = a[sortKey.value];
+      const bVal = b[sortKey.value];
+      
+      // Обработка разных типов данных
+      if (typeof aVal === 'number' && typeof bVal === 'number') {
+        return sortOrder.value === 'asc' ? aVal - bVal : bVal - aVal;
+      }
+      
+      // Строки
+      const aStr = String(aVal).toLowerCase();
+      const bStr = String(bVal).toLowerCase();
+      
+      if (sortOrder.value === 'asc') {
+        return aStr.localeCompare(bStr);
+      } else {
+        return bStr.localeCompare(aStr);
+      }
+    });
+  }
+  
+  return result;
+});
+
+// Форматирование значения для отображения
+const formatValue = (value: any): string => {
+  if (value === null || value === undefined) return "—";
+  if (typeof value === 'boolean') return value ? 'Да' : 'Нет';
+  return String(value);
 };
 </script>

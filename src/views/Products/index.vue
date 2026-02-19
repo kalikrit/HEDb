@@ -79,7 +79,7 @@
     <Card>
       <Table
         :columns="columns"
-        :data="products"
+        :data="sortedProducts"
         :loading="isLoading"
         :pagination="true"
         :total="total"
@@ -340,6 +340,42 @@ const {
   getPagination: pagination
 } = storeToRefs(productsStore);
 
+// Состояние сортировки
+const sortConfig = ref({
+  key: '',
+  order: 'asc' as 'asc' | 'desc'
+});
+
+// Обработка сортировки
+const handleSort = (key: string, order: 'asc' | 'desc') => {
+  console.log('Сортировка:', key, order);
+  sortConfig.value = { key, order };
+  
+  // Здесь можно добавить логику сортировки через store
+  // или сортировать локально
+};
+
+// Отсортированные товары (локальная сортировка)
+const sortedProducts = computed(() => {
+  if (!sortConfig.value.key) return products.value;
+  
+  return [...products.value].sort((a, b) => {
+    const aVal = a[sortConfig.value.key];
+    const bVal = b[sortConfig.value.key];
+    
+    if (typeof aVal === 'number' && typeof bVal === 'number') {
+      return sortConfig.value.order === 'asc' ? aVal - bVal : bVal - aVal;
+    }
+    
+    const aStr = String(aVal).toLowerCase();
+    const bStr = String(bVal).toLowerCase();
+    
+    return sortConfig.value.order === 'asc' 
+      ? aStr.localeCompare(bStr)
+      : bStr.localeCompare(aStr);
+  });
+});
+
 // Локальные фильтры
 const filters = reactive<ProductFilters>({
   search: storeFilters.value.search || "",
@@ -494,12 +530,6 @@ const clearAllFilters = () => {
   filters.status = "";
   filters.minPrice = undefined;
   filters.maxPrice = undefined;
-};
-
-// Сортировка
-const handleSort = (key: string, order: string) => {
-  // Временно просто логируем
-  console.log("Sort:", key, order);
 };
 
 // Пагинация
