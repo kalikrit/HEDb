@@ -16,6 +16,13 @@ export const formatDateTime = (
   return dayjs(date).format(format);
 };
 
+export const formatTime = (
+  date: string | Date,
+  format = "HH:mm"
+): string => {
+  return dayjs(date).format(format);
+};
+
 export const formatTimeAgo = (date: string | Date): string => {
   const now = dayjs();
   const target = dayjs(date);

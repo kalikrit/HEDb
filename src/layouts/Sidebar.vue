@@ -94,7 +94,9 @@
           <div class="flex items-center space-x-3">
             <ShoppingCart class="w-5 h-5" />
             <span>Заказы</span>
-            <span class="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">5</span>
+            <span class="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+              {{ ordersCount }}
+            </span>
           </div>
           <ChevronDown 
             class="w-4 h-4 transition-transform duration-200"
