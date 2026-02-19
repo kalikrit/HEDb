@@ -90,19 +90,20 @@
       >
         <!-- Изображение -->
         <template #image="{ row }">
-          <img
-            :src="row.images[0] || 'https://via.placeholder.com/40'"
-            :alt="row.name"
-            class="w-10 h-10 rounded object-cover"
-          />
+            <div class="w-10 h-10 rounded bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 text-xs font-medium">
+                {{ row.name.charAt(0).toUpperCase() }}
+            </div>
         </template>
 
         <!-- Название -->
         <template #name="{ row }">
-          <div>
+        <router-link 
+            :to="`/products/${row.id}`"
+            class="hover:text-primary-600 dark:hover:text-primary-400"
+        >
             <p class="font-medium text-gray-900 dark:text-white">{{ row.name }}</p>
             <p class="text-xs text-gray-500 dark:text-gray-400">SKU: {{ row.sku }}</p>
-          </div>
+        </router-link>
         </template>
 
         <!-- Цена -->
@@ -310,7 +311,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from "vue";
+import { ref, reactive, computed, onMounted, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { 
   Plus, Search, Edit2, Trash2, Package, DollarSign,
@@ -341,12 +342,29 @@ const {
 
 // Локальные фильтры
 const filters = reactive<ProductFilters>({
-  search: "",
-  category: "",
-  status: "",
-  minPrice: undefined,
-  maxPrice: undefined,
+  search: storeFilters.value.search || "",
+  category: storeFilters.value.category || "",
+  status: storeFilters.value.status || "",
+  minPrice: storeFilters.value.minPrice,
+  maxPrice: storeFilters.value.maxPrice,
 });
+
+// 👇 СИНХРОНИЗИРУЕМ ИЗМЕНЕНИЯ С STORE
+watch(filters, (newFilters) => {
+  console.log('🔄 Фильтры изменились, обновляем store', newFilters);
+  productsStore.setFilters(newFilters);
+}, { deep: true });
+
+// 👇 СЛЕДИМ ЗА ИЗМЕНЕНИЯМИ В STORE (на случай если фильтры меняются из другого места)
+watch(storeFilters, (newStoreFilters) => {
+  console.log('📥 Store фильтры изменились, обновляем локальные', newStoreFilters);
+  // Обновляем локальные фильтры без триггера watch
+  filters.search = newStoreFilters.search || "";
+  filters.category = newStoreFilters.category || "";
+  filters.status = newStoreFilters.status || "";
+  filters.minPrice = newStoreFilters.minPrice;
+  filters.maxPrice = newStoreFilters.maxPrice;
+}, { deep: true });
 
 // Пагинация
 const page = computed(() => pagination.value.page);
@@ -455,7 +473,7 @@ onMounted(() => {
 
 // Фильтры
 const applyFilters = () => {
-  productsStore.setFilters(filters);
+  //productsStore.setFilters(filters);
 };
 
 const debouncedSearch = (value: string) => {
@@ -478,7 +496,6 @@ const clearAllFilters = () => {
   filters.status = "";
   filters.minPrice = undefined;
   filters.maxPrice = undefined;
-  applyFilters();
 };
 
 // Сортировка

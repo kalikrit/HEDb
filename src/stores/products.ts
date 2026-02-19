@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
-import type { Product, ProductCategory, ProductFilters, PaginatedResponse } from "@/types";
+import type { Product, ProductCategory, ProductFilters } from "@/types";
 import { PAGINATION } from "@/utils/constants";
 
 // Mock данные для демо
@@ -54,25 +54,61 @@ export const useProductsStore = defineStore("products", () => {
   const categories = ref<ProductCategory[]>(MOCK_CATEGORIES);
   const selectedProduct = ref<Product | null>(null);
   const filters = ref<ProductFilters>({});
+  const page = ref(1); // 👈 ЭТО ВАЖНО - страница пагинации
+  const limit = ref(PAGINATION.DEFAULT_LIMIT);
+  const isLoading = ref(false);
   const pagination = ref({
-    page: PAGINATION.DEFAULT_PAGE,
+    page: 1,
     limit: PAGINATION.DEFAULT_LIMIT,
     total: MOCK_PRODUCTS.length,
   });
-  const isLoading = ref(false);
 
   // ==================== Getters ====================
   const getProducts = computed(() => products.value);
   const getCategories = computed(() => categories.value);
   const getSelectedProduct = computed(() => selectedProduct.value);
   const getFilters = computed(() => filters.value);
-  const getPagination = computed(() => pagination.value);
+  const getPage = computed(() => page.value);
+  const getLimit = computed(() => limit.value);
   const getIsLoading = computed(() => isLoading.value);
+  const getPagination = computed(() => pagination.value);
 
+  // ==================== Actions ====================
+  
+  // Установка фильтров
+  const setFilters = (newFilters: ProductFilters) => {
+    console.log('🔍 Store: установка фильтров', newFilters);
+    filters.value = { ...filters.value, ...newFilters };
+    page.value = 1; // 👈 page уже определена
+    pagination.value.page = 1;
+  };
+
+  // Сброс фильтров
+  const resetFilters = () => {
+    console.log('🧹 Store: сброс фильтров');
+    filters.value = {};
+    page.value = 1;
+    pagination.value.page = 1;
+  };
+
+  // Установка страницы
+  const setPage = (newPage: number) => {
+    page.value = newPage;
+    pagination.value.page = newPage;
+  };
+
+  // Установка лимита
+  const setLimit = (newLimit: number) => {
+    limit.value = newLimit;
+    pagination.value.limit = newLimit;
+    page.value = 1;
+    pagination.value.page = 1;
+  };
+
+  // Получение отфильтрованных товаров
   const getFilteredProducts = computed(() => {
     let filtered = [...products.value];
 
-    // Применяем фильтры
     if (filters.value.category) {
       filtered = filtered.filter(p => p.category === filters.value.category);
     }
@@ -108,7 +144,7 @@ export const useProductsStore = defineStore("products", () => {
       );
     }
 
-    // Обновляем пагинацию
+    // Обновляем общее количество для пагинации
     pagination.value.total = filtered.length;
 
     // Применяем пагинацию
@@ -118,6 +154,7 @@ export const useProductsStore = defineStore("products", () => {
     return filtered.slice(start, end);
   });
 
+  // Получение статистики
   const getProductStats = computed(() => {
     const totalProducts = products.value.length;
     const activeProducts = products.value.filter(p => p.status === "active").length;
@@ -132,13 +169,10 @@ export const useProductsStore = defineStore("products", () => {
     };
   });
 
-  // ==================== Actions ====================
-
-  // Получение товаров
+  // Загрузка товаров
   const fetchProducts = async () => {
     isLoading.value = true;
     try {
-      // Mock API call
       await new Promise(resolve => setTimeout(resolve, 500));
       return { success: true, data: getFilteredProducts.value };
     } catch (error) {
@@ -246,89 +280,38 @@ export const useProductsStore = defineStore("products", () => {
     }
   };
 
-  // Обновление инвентаря
-  const updateInventory = async (productId: string, quantity: number) => {
-    return updateProduct(productId, { quantity });
-  };
-
-  // Фильтрация
-  const setFilters = (newFilters: ProductFilters) => {
-    filters.value = { ...filters.value, ...newFilters };
-    pagination.value.page = PAGINATION.DEFAULT_PAGE; // Сбрасываем на первую страницу
-  };
-
-  const clearFilters = () => {
-    filters.value = {};
-  };
-
-  // Пагинация
-  const setPage = (page: number) => {
-    pagination.value.page = page;
-  };
-
-  const setLimit = (limit: number) => {
-    pagination.value.limit = limit;
-    pagination.value.page = PAGINATION.DEFAULT_PAGE;
-  };
-
-  // Категории
-  const fetchCategories = async () => {
-    // Mock - уже загружены
-    return { success: true, data: categories.value };
-  };
-
-  const createCategory = async (categoryData: Omit<ProductCategory, "id" | "productCount">) => {
-    isLoading.value = true;
-    try {
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      const newCategory: ProductCategory = {
-        ...categoryData,
-        id: categoryData.slug,
-        productCount: 0,
-      };
-      
-      categories.value.push(newCategory);
-      return { success: true, data: newCategory };
-    } catch (error) {
-      return { success: false, error: "Ошибка создания категории" };
-    } finally {
-      isLoading.value = false;
-    }
-  };
-
-  // ==================== Экспорт ====================
   return {
     // State
     products,
     categories,
     selectedProduct,
     filters,
-    pagination,
+    page,
+    limit,
     isLoading,
+    pagination,
 
     // Getters
     getProducts,
     getCategories,
     getSelectedProduct,
     getFilters,
-    getPagination,
+    getPage,
+    getLimit,
     getIsLoading,
+    getPagination,
     getFilteredProducts,
     getProductStats,
 
     // Actions
+    setFilters,
+    resetFilters,
+    setPage,
+    setLimit,
     fetchProducts,
     fetchProductById,
     createProduct,
     updateProduct,
     deleteProduct,
-    updateInventory,
-    setFilters,
-    clearFilters,
-    setPage,
-    setLimit,
-    fetchCategories,
-    createCategory,
   };
 });
