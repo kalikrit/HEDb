@@ -58,7 +58,19 @@ const router = createRouter({
       name: 'shipping',
       component: () => import('@/views/Orders/Shipping.vue'),
       meta: { requiresAuth: true },
-    },    
+    }, 
+    {
+      path: '/customers',
+      name: 'customers',
+      component: () => import('@/views/Customers/index.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/customers/:id',
+      name: 'customer-detail',
+      component: () => import('@/views/Customers/CustomerDetails.vue'),
+      meta: { requiresAuth: true },
+    }, 
     {
       path: '/login',
       name: 'login',
