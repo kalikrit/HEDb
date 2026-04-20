@@ -72,6 +72,29 @@ const router = createRouter({
       meta: { requiresAuth: true },
     }, 
     {
+      path: '/analytics',
+      redirect: '/analytics/sales',
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/analytics/sales',
+      name: 'analytics-sales',
+      component: () => import('@/views/Analytics/Sales.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/analytics/products',
+      name: 'analytics-products',
+      component: () => import('@/views/Analytics/Products.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/analytics/reports',
+      name: 'analytics-reports',
+      component: () => import('@/views/Analytics/Reports.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/login',
       name: 'login',
       component: () => import('@/views/Login.vue'),
