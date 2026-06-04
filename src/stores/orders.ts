@@ -80,7 +80,11 @@ const generateMockOrders = (count: number): Order[] => {
   });
 };
 
-const MOCK_ORDERS = generateMockOrders(50);
+// Генерируем случайное количество заказов от 150 до 230
+const ordersFrom = 150
+const ordersTo = 240
+const orderCount = Math.floor(Math.random() * (ordersTo - ordersFrom + 1)) + ordersFrom;
+const MOCK_ORDERS = generateMockOrders(orderCount);
 
 export const useOrdersStore = defineStore("orders", () => {
   // ==================== State ====================
