@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
-import type { Order, OrderStatus, OrderFilters, Customer } from "@/types";
+import type { Order, OrderStatus, OrderFilters, Customer, PaymentStatus } from "@/types";
 import { PAGINATION } from "@/utils/constants";
 
 // Мок данные для демо (без изменений)
@@ -26,28 +26,71 @@ const generateMockCustomers = (count: number): Customer[] => {
   }));
 };
 
+/**
+ * Генерирует указанное количество мок-заказов.
+ * @param count - количество заказов для генерации
+ */
 const generateMockOrders = (count: number): Order[] => {
+  // Генерируем пул клиентов (10 штук достаточно)
   const customers = generateMockCustomers(10);
   const statuses: OrderStatus[] = ["pending", "processing", "shipped", "delivered", "cancelled"];
   const paymentMethods = ["credit_card", "paypal", "bank_transfer", "cash"];
-  
+
   return Array.from({ length: count }, (_, i) => {
     const customer = customers[Math.floor(Math.random() * customers.length)];
-    const itemsCount = Math.floor(Math.random() * 5) + 1;
-    const items = Array.from({ length: itemsCount }, (_, j) => ({
-      id: `item-${i}-${j}`,
-      orderId: `ord-${i + 1}`,
-      productId: `prod-${Math.floor(Math.random() * 50) + 1}`,
-      productName: `Товар ${Math.floor(Math.random() * 50) + 1}`,
-      sku: `SKU-${String(Math.floor(Math.random() * 1000)).padStart(4, "0")}`,
-      quantity: Math.floor(Math.random() * 3) + 1,
-      unitPrice: Math.floor(Math.random() * 5000) + 500,
-      totalPrice: 0, // посчитаем ниже
-    }));
+
+    const statusRand = Math.random();
+    let status: OrderStatus;
+    if (statusRand < 0.2) status = 'pending';
+    else if (statusRand < 0.4) status = 'processing';
+    else if (statusRand < 0.6) status = 'shipped';
+    else if (statusRand < 0.95) status = 'delivered';
+    else status = 'cancelled';
     
-    // Считаем total для каждого item
-    items.forEach(item => {
-      item.totalPrice = item.quantity * item.unitPrice;
+    // --- Логика paymentStatus в зависимости от status ---
+    let paymentStatus: PaymentStatus;
+    const rand = Math.random();
+
+    if (status === 'cancelled') {
+      if (rand < 0.7) paymentStatus = 'failed';
+      else if (rand < 0.9) paymentStatus = 'refunded';
+      else paymentStatus = 'pending';
+    }
+    else if (status === 'delivered') {
+      paymentStatus = 'paid';
+    }
+    else if (status === 'shipped') {
+      // Отправленные заказы почти всегда оплачены, но бывают ошибки
+      if (rand < 0.95) paymentStatus = 'paid';
+      else paymentStatus = 'failed';
+    }
+    else { // status === 'pending' || status === 'processing'
+      if (rand < 0.05) paymentStatus = 'failed';
+      else if (rand < 0.07) paymentStatus = 'refunded';
+      else if (rand < 0.2) paymentStatus = 'pending';
+      else paymentStatus = 'paid';
+    }
+    // --------------------------------------------------
+
+    // Генерация товаров в заказе (от 1 до 5 позиций)
+    const itemsCount = Math.floor(Math.random() * 5) + 1;
+    const items = Array.from({ length: itemsCount }, (_, j) => {
+      const productId = `prod-${Math.floor(Math.random() * 50) + 1}`;
+      const productName = `Товар ${Math.floor(Math.random() * 50) + 1}`;
+      const quantity = Math.floor(Math.random() * 3) + 1;
+      const unitPrice = Math.floor(Math.random() * 5000) + 500;
+      const totalPrice = quantity * unitPrice;
+      
+      return {
+        id: `item-${i}-${j}`,
+        orderId: `ord-${i + 1}`,
+        productId,
+        productName,
+        sku: `SKU-${String(Math.floor(Math.random() * 1000)).padStart(4, '0')}`,
+        quantity,
+        unitPrice,
+        totalPrice,
+      };
     });
     
     const subtotal = items.reduce((sum, item) => sum + item.totalPrice, 0);
@@ -55,6 +98,11 @@ const generateMockOrders = (count: number): Order[] => {
     const tax = Math.floor(subtotal * 0.2); // 20% НДС
     const discount = Math.random() > 0.7 ? Math.floor(subtotal * 0.1) : 0;
     const total = subtotal + shipping + tax - discount;
+    
+    // Дата создания в пределах последних 90 дней
+    const createdAt = new Date(Date.now() - Math.floor(Math.random() * 90) * 86400000).toISOString();
+    const updatedAt = new Date().toISOString();
+    const estimatedDelivery = new Date(Date.now() + Math.floor(Math.random() * 7) * 86400000).toISOString();
     
     return {
       id: `ord-${i + 1}`,
@@ -67,15 +115,15 @@ const generateMockOrders = (count: number): Order[] => {
       discount,
       total,
       currency: "RUB",
-      status: statuses[Math.floor(Math.random() * statuses.length)],
-      paymentStatus: Math.random() > 0.8 ? "pending" : "paid",
+      status,
+      paymentStatus,
       paymentMethod: paymentMethods[Math.floor(Math.random() * paymentMethods.length)],
       shippingAddress: customer.address!,
       billingAddress: customer.address!,
       notes: Math.random() > 0.8 ? "Позвонить перед доставкой" : undefined,
-      createdAt: new Date(Date.now() - Math.floor(Math.random() * 30) * 86400000).toISOString(),
-      updatedAt: new Date().toISOString(),
-      estimatedDelivery: new Date(Date.now() + Math.floor(Math.random() * 7) * 86400000).toISOString(),
+      createdAt,
+      updatedAt,
+      estimatedDelivery,
     };
   });
 };
