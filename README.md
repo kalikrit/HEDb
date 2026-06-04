@@ -1,4 +1,3 @@
-cat > README.md << 'EOF'
 # 🛒 Headless E-commerce Dashboard
 
 ![Vue 3](https://img.shields.io/badge/Vue-3-42b883?logo=vuedotjs)
